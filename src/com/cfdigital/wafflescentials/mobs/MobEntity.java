@@ -105,12 +105,6 @@ public class MobEntity {
    	
    	//add stuff to it
     public void dressMonster(String mobClassString){
-    	/* 
-    	 * TODO
-    	 * 
-    	 * WHY THE FUCK IS THIS RETURNING FALSE??? LOOK HERE FOR NPE!!!
-    	 */
-    	//if (!monster.isValid()) return;
     	MobClass mobclass = Mobs.getMobClass(mobClassString);
     	if (mobclass == null) return;
     	EntityEquipment equipment = this.monster.getEquipment();

@@ -80,7 +80,6 @@ public class Schedulers {
 		plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
             public void run() {
             	MobSpawning.doSpawn();
-            	//WaffleScentials.plugin.getServer().getWorld("world").spawnCreature(arg0, arg1)
             }
            
         }, 10L * 5, 10L * 5);

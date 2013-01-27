@@ -6,6 +6,7 @@ import java.util.Random;
 
 import net.minecraft.server.v1_4_6.WorldChunkManager;
 
+import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_4_6.CraftWorld;
 import org.bukkit.craftbukkit.v1_4_6.entity.CraftSkeleton;
 import org.bukkit.entity.*;
@@ -13,6 +14,7 @@ import org.bukkit.event.*;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -206,13 +208,9 @@ public class MobListener implements Listener {
 			}
 			break;
 
-
 		default:
 			//no matched classes
 			return;
-
-
-
 		}
 		if (rand.size() == 0) {
 			//bail out
@@ -225,8 +223,6 @@ public class MobListener implements Listener {
 		//hope to god this is not somehow null
 		if (mobClass == null) return;
 		mob.dressMonster(mobClass);	
-		//mob.setMeta(mobClass);
-
 		le.setMetadata("class", new FixedMetadataValue(plugin,mobClass));
 
 		int type = Mobs.mobClass.get(mobClass).getType();
@@ -255,6 +251,51 @@ public class MobListener implements Listener {
 
 	public void spawnBonus(int bonus) {
 
+	}
+	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void creatureDeath(EntityDeathEvent event) {
+		LivingEntity le = event.getEntity();
+		if (Mobs.mob(le) != null ){
+			List<MetadataValue> values = le.getMetadata("class");
+			String mobClass = null;
+			for(MetadataValue value : values){
+				mobClass = value.value().toString();
+			}
+			if (mobClass != null){
+				if (Mobs.getMobClass(mobClass).getDrops().size() > 0) {
+					event.getEntity().getEquipment().clear();
+					event.getDrops().clear();
+					if (!(le.getKiller() == null)) {
+						event.getDrops().add(Mobs.getMobClass(mobClass).getDrops().get(0));
+						float reward = Mobs.getMobClass(mobClass).getReward();
+						le.getKiller().sendMessage(ChatColor.DARK_GRAY + "You gain " + reward + " for killing this " + mobClass);
+						String name = le.getKiller().getName();
+						if (WaffleScentials.economy.isEnabled()) { 
+							if (WaffleScentials.economy.hasAccount(name)) {
+								WaffleScentials.economy.bankDeposit(name, reward);
+							}
+						}
+					}
+				} else {
+					//somehow there is metadata but no hashmap entry
+					event.getEntity().getEquipment().clear();
+					event.getDrops().clear();
+				}
+				
+			} else {
+				//stop drops from all mobs not in a class in spawn control worlds
+				String spawnworld = event.getEntity().getWorld().getName();
+				if (spawnworld == null) return;
+				if (spawnworld.equalsIgnoreCase(Config.spawnControlWorlds)) {
+					event.getEntity().getEquipment().clear();
+					event.getDrops().clear();
+				}
+				
+			}
+		}
+		Mobs.delMob(le);
+		return;
 	}
 
 }
