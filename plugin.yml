@@ -1,0 +1,54 @@
+name: WaffleScentials
+main: com.cfdigital.wafflescentials.WaffleScentials
+version: 1.0
+author: ColdFyre
+softdepend:
+  - Help
+  - Vault
+description: WaffleScentials
+commands:
+  mute:
+    description: Mutes the fucker
+    usage: /mute <person>
+  msg:
+    description: Message person
+    usage: /msg <person> <message>
+  list:
+    description: Online users
+    usage: /list
+  afk:
+    description: Mark self as AFK
+    usage: /afk <reason>
+  reply:
+    description: Reply
+    usage: /reply <message>
+  r:
+    description: Reply
+    usage: /r <message>
+  me:
+    description: Emotion
+    usage: /me <action>
+  warp:
+    description: WaffleScentials warp subsystem
+    usage: /warp <command> help - Displays the help for WaffleScentials warping
+  mob:
+    description: EEKS
+    usage: /bats
+  ud:
+    description: Not urban dictionary
+    usage: /ud
+  say:
+    description: Broadcast message
+    usage: /say <message>
+  heal:
+    description: heals self
+    usage: /heal
+  kit:
+    description: Spawns kit
+    usage: /kit <kitname>
+    
+    
+    
+    
+    
+    
