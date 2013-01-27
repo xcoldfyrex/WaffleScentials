@@ -28,7 +28,7 @@ public class MobSpawning{
 		if (!checkBlock.getRelative(BlockFace.UP, 1).getType().equals(Material.AIR)) return false;
 		if (!checkBlock.getRelative(BlockFace.UP, 2).getType().equals(Material.AIR)) return false;
 		if (!checkBlock.getRelative(BlockFace.UP, 3).getType().equals(Material.AIR)) return false;
-		if (!((checkBlock.getRelative(BlockFace.UP).getLightFromBlocks() < 7) && (checkBlock.getRelative(BlockFace.UP).getLightLevel() < 7))) return false;
+		if (!((checkBlock.getRelative(BlockFace.UP).getLightFromBlocks() < 8) && (checkBlock.getRelative(BlockFace.UP).getLightLevel() < 8))) return false;
 
 		return true;
 	}
@@ -58,23 +58,7 @@ public class MobSpawning{
 			targety--;
 			checkBlock = world.getBlockAt(targetx, targety, targetz);
 		}
-		//make sure there is room to spawn them and stop spawning them in walls
-		
-		/*
-		if (checkBlock.getRelative(BlockFace.UP, 1).getType().equals(Material.AIR)) {
-			if (checkBlock.getRelative(BlockFace.UP, 2).getType().equals(Material.AIR)) {
-				if (Config.debug){
-					Log.warn("Light: " + checkBlock.getRelative(BlockFace.UP).getLightFromBlocks() + " " + (checkBlock.getRelative(BlockFace.UP).getLightLevel()));
-				}
-				//if (((checkBlock.getRelative(BlockFace.UP).getLightFromBlocks() < 7) && (checkBlock.getRelative(BlockFace.UP).getLightLevel() < 7)) || checkBlock.getWorld().isThundering() ) {
-				if (((checkBlock.getRelative(BlockFace.UP).getLightFromBlocks() < 7) && (checkBlock.getRelative(BlockFace.UP).getLightLevel() < 7))) {
-					Location spawnLoc = new Location(world,targetx, targety, targetz);
-					//Log.warn(basex + " " + randx + " " + basey + " " + randy + " " + basez + " " + randz);
-			   		return spawnLoc;
-			   	}
-			}
-		}
-		*/
+
 		if (safeToSpawn(checkBlock)) {
 			Location spawnLoc = new Location(world,targetx + .5, targety + 1, targetz + .5);
 	   		return spawnLoc;

@@ -53,7 +53,6 @@ public class WaffleScentials extends JavaPlugin {
 	}
 	
 	private final PlayerListener playerListener = new PlayerListener(this);
-	private final ServerListener serverListener = new ServerListener(this);
 	private final MobListener mobListener = new MobListener(this);
 	private final BlockListener blockListener = new BlockListener(this);
 
@@ -64,7 +63,6 @@ public class WaffleScentials extends JavaPlugin {
 	{
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(playerListener, this);
-		pm.registerEvents(serverListener, this);
 		pm.registerEvents(mobListener, this);
 		pm.registerEvents(blockListener, this);
 

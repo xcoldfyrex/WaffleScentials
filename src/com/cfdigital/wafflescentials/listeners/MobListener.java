@@ -6,7 +6,6 @@ import java.util.Random;
 
 import net.minecraft.server.v1_4_6.WorldChunkManager;
 
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.craftbukkit.v1_4_6.CraftWorld;
 import org.bukkit.craftbukkit.v1_4_6.entity.CraftSkeleton;
 import org.bukkit.entity.*;
@@ -25,7 +24,6 @@ import com.cfdigital.wafflescentials.Config;
 import com.cfdigital.wafflescentials.WaffleScentials;
 import com.cfdigital.wafflescentials.mobs.MobEntity;
 import com.cfdigital.wafflescentials.mobs.Mobs;
-import com.cfdigital.wafflescentials.util.WaffleLogger;
 
 public class MobListener implements Listener {
 

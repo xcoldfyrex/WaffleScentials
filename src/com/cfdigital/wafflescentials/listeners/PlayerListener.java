@@ -255,6 +255,7 @@ public class PlayerListener implements Listener	{
 	
 	private boolean check_kit(InventoryClickEvent event, boolean despawn) {
 		Player player = (Player)event.getWhoClicked();
+		if (player == null) return false;
 		if (event.getCursor().getTypeId() == 0 && event.getCurrentItem().getTypeId() != 0) {
 			ItemMeta item = event.getCurrentItem().getItemMeta();
 			if (item == null) return true;
