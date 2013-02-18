@@ -31,9 +31,6 @@ commands:
   warp:
     description: WaffleScentials warp subsystem
     usage: /warp <command> help - Displays the help for WaffleScentials warping
-  mob:
-    description: EEKS
-    usage: /bats
   ud:
     description: Not urban dictionary
     usage: /ud

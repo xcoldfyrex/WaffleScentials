@@ -85,6 +85,22 @@ public class PlayerClass {
 		return 0;
 	}
 
+	public String getLastMessageString() {
+		return lastMessageString;
+	}
+
+	public void setLastMessageString(String lastMessageString) {
+		this.lastMessageString = lastMessageString;
+	}
+
+	public long getLastMessageSent() {
+		return lastMessageSent;
+	}
+
+	public void setLastMessageSent(long lastMessageSent) {
+		this.lastMessageSent = lastMessageSent;
+	}
+
 	private boolean muted = false;
 	private boolean isAFK = false;
 	private String reasonAFK; 
@@ -93,5 +109,8 @@ public class PlayerClass {
 	private long lastHeal = 0;
 	private String mobClassAttacker;
     private HashMap<String, Long> kitCoolDown = new HashMap<String, Long>();
+    private long lastMessageSent = 0;
+    private String lastMessageString = "";
+    
 
 }

@@ -3,7 +3,8 @@ package com.cfdigital.wafflescentials.listeners;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.server.v1_4_6.WorldChunkManager;
+
+import net.minecraft.server.v1_4_R1.WorldChunkManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -11,7 +12,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.Dispenser;
-import org.bukkit.craftbukkit.v1_4_6.CraftWorld;
+import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -40,7 +41,6 @@ public class BlockListener implements Listener	{
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockPhsyics(BlockPhysicsEvent event)
 	{	
-		
 		Block block = event.getBlock();
 		Material mat = event.getChangedType();
 		if (mat.equals(Material.SAND)) event.setCancelled(true);

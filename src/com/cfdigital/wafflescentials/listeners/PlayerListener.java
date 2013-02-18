@@ -4,12 +4,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -38,17 +36,25 @@ public class PlayerListener implements Listener	{
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerKick(PlayerKickEvent event)
-	{
+	public void onPlayerKick(PlayerKickEvent event) {
 		if (event.isCancelled()) return;
 		final Player player = event.getPlayer();
 		final String kickReason = event.getReason();
 		event.setLeaveMessage("§e" + player.getName() + " was kicked! Reason: " + kickReason);		
 	}
 
+	public void checkPlayerSpam(AsyncPlayerChatEvent event){
+		Player player = event.getPlayer();
+		String message = event.getMessage();
+		long lastMessage = plugin.wafflePlayers.get(player.getName()).getLastMessageSent();
+		//String
+		
+	}
 	@EventHandler(priority = EventPriority.LOW)
-	public void onPlayerChat(AsyncPlayerChatEvent event)
-	{	
+	public void onPlayerChat(AsyncPlayerChatEvent event) {	
+		
+		if (event.isCancelled()) return;
+		
 		String message;
 		Player player = event.getPlayer();
 		message = event.getMessage();
@@ -125,8 +131,7 @@ public class PlayerListener implements Listener	{
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event)
-	{
+	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		Player player = event.getPlayer();
 		if (event.isCancelled()) return;
 		PlayerClass afkPlayer = WaffleScentials.wafflePlayers.get(player.getName());
@@ -142,15 +147,13 @@ public class PlayerListener implements Listener	{
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerQuit(PlayerQuitEvent event)
-	{
+	public void onPlayerQuit(PlayerQuitEvent event) {
 		PlayerClass afkPlayer = WaffleScentials.wafflePlayers.get(event.getPlayer().getName());
 		afkPlayer.unsetAFK();
-
 	}
+	
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerJoin(PlayerJoinEvent Event) 
-	{
+	public void onPlayerJoin(PlayerJoinEvent Event) {
 		Player player = Event.getPlayer();
 		String myPrefix = WaffleScentials.getPrefix(player);
 		if (myPrefix == null) return;
@@ -166,6 +169,7 @@ public class PlayerListener implements Listener	{
 			WaffleScentials.wafflePlayers.get(playerName).setLastActive(new Date().getTime());
 		}
 	}
+	
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPLayerMove(PlayerMoveEvent Event) {
 		if (Event.isCancelled()) return;
@@ -180,22 +184,7 @@ public class PlayerListener implements Listener	{
 			WaffleScentials.plugin.getServer().broadcastMessage("§e** " + myPrefix + player.getName() + "§f is no longer AFK");
 			afkPlayer.unsetAFK();
 		}
-
 	}
-
-
-
-
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onPlayerDeathEvent(PlayerDeathEvent event) {
-		Player player = event.getEntity().getPlayer();
-		String pn = player.getDisplayName();
-		String me = WaffleScentials.wafflePlayers.get(pn).getMobClassAttacker();
-		if (me != "") {
-			event.setDeathMessage(pn + " was slain by " + ChatColor.GREEN + me);
-		}
-	}
-
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerPickupItemEvent(PlayerPickupItemEvent event) {
@@ -239,40 +228,50 @@ public class PlayerListener implements Listener	{
 
 	@EventHandler (priority = EventPriority.NORMAL)
 	public void onInventoryClick (InventoryClickEvent event) {
+		//Log.warn(event.getSlot() + " "+ event.getSlotType() + " " +event.getRawSlot() + " " + event.getView().getTitle() + " " +event.getCurrentItem());
+
 		if (!event.isCancelled()) {
-			//Log.warn(event.getSlot() + " "+ event.getSlotType() + " " +event.getRawSlot());
-			if (event.getSlotType().equals(SlotType.ARMOR)) return;
-			if (event.getSlot() != event.getRawSlot()) {
-				if (!((event.getRawSlot() - 36) == event.getSlot())) {
-					if(check_kit(event, false)) return;
-				}	
-			} 
-			if (event.getRawSlot() < 9 && event.getSlotType().equals(SlotType.CONTAINER)) {
-				if(check_kit(event, true)) return;
+			Player player = (Player)event.getWhoClicked();
+			//trying to repair
+			if (event.getSlotType().equals(SlotType.CRAFTING)){
+				if(check_kit(event) == true) {
+					player.closeInventory();
+					player.sendMessage(ChatColor.GRAY + "This is a kit item and you are not permitted to repair it.");
+					event.setCancelled(true);
+					return;
+				}
+				
 			}
+			//they can always place in armor slot
+			if (event.getSlotType().equals(SlotType.ARMOR)) return;
+			//they are looking at their own inventory
+			if (event.getView().getTitle().equals("")) return;
+			//looking at anvil
+			if (event.getView().getTitle().equals("Repair")) return;
+			//crafting table
+			if (event.getView().getTitle().equals("container.crafting")) return;
+			//none of the allowed things match, just check
+			if(check_kit(event)){
+				player.sendMessage(ChatColor.GRAY + "This is a kit item and you are not permitted to store it.");
+				event.setCancelled(true);
+				return;
+			}
+
 		}
 	}
 	
-	private boolean check_kit(InventoryClickEvent event, boolean despawn) {
+	private boolean check_kit(InventoryClickEvent event) {
 		Player player = (Player)event.getWhoClicked();
-		if (player == null) return false;
-		if (event.getCursor().getTypeId() == 0 && event.getCurrentItem().getTypeId() != 0) {
+		if (player == null || event.getCursor() == null || event.getCurrentItem() == null) return false;
+		//if (event.getCursor().getTypeId() == 0 && event.getCurrentItem().getTypeId() != 0) {
 			ItemMeta item = event.getCurrentItem().getItemMeta();
-			if (item == null) return true;
+			if (item == null) return false;
 			List<String> im = item.getLore();
-			if (im == null) return true;
-			if (!im.isEmpty()) {
-				if (despawn) {
-					ItemStack is = new ItemStack(Material.AIR);
-					event.setCurrentItem(is);
-					player.sendMessage(ChatColor.GRAY + "This is a kit item and you are not permitted to store it.");
-				} else {
-					player.sendMessage(ChatColor.GRAY + "This is a kit item and you are not permitted to store it.");
-				}
-				event.setCancelled(true);
+			if (im == null) return false;
+			if (!im.equals("")) {
 				return true;
 			}
-		}
+		//}
 		return false;
 	}
 }
