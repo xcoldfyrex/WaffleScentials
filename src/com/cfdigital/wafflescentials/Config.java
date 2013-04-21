@@ -15,6 +15,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.cfdigital.wafflescentials.chat.ChatClass;
+import com.cfdigital.wafflescentials.util.WaffleLogger;
 
 public class Config extends JavaPlugin {
 
@@ -27,7 +28,6 @@ public class Config extends JavaPlugin {
 	private static HashMap<World, Float> deathTax = new HashMap<World, Float>();
 
 	public boolean loadSettings() {
-
 		configFile = new File(WaffleScentials.plugin.getDataFolder(), "config.yml");
 		config = WaffleScentials.plugin.getConfig();
 
@@ -63,6 +63,7 @@ public class Config extends JavaPlugin {
 					String world = temp[1];
 					String tax = config.getString("deathtax." + world + ".percent");
 					deathTax.put(WaffleScentials.plugin.getServer().getWorld(world), Float.valueOf(tax));
+					WaffleLogger.info("Added tax of " + tax + " to " + world);
 				}
 			}
 		}
@@ -72,6 +73,7 @@ public class Config extends JavaPlugin {
 	}
 
 	public void loadFilters(){
+		WaffleLogger.info("Loading chat filters");
 		try {
 			BufferedReader input =  new BufferedReader(new FileReader(WaffleScentials.plugin.getDataFolder()+"/filters.txt"));
 			String line = null;
@@ -89,6 +91,7 @@ public class Config extends JavaPlugin {
 			input.close();
 		}
 		catch (FileNotFoundException e) {
+			WaffleLogger.warning("Cannot find filters.txt");
 		}
 		catch (Exception e) {
 			e.printStackTrace();

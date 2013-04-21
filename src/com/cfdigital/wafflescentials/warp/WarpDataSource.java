@@ -59,10 +59,11 @@ public class WarpDataSource {
                 boolean publicAll = set.getBoolean("publicAll");
                 String permissions = set.getString("permissions");
                 String welcomeMessage = set.getString("welcomeMessage");
-                Warp warp = new Warp(index, name, creator, world, x, y, z, yaw, pitch, publicAll, permissions, welcomeMessage);
+                boolean isFree = set.getBoolean("isFree");
+                Warp warp = new Warp(index, name, creator, world, x, y, z, yaw, pitch, publicAll, permissions, welcomeMessage,isFree);
                 ret.put(name, warp);
             }
-            WaffleLogger.info(" " + size + " warps loaded");
+            WaffleLogger.info(size + " warps loaded");
         } catch (SQLException ex) {
         	WaffleLogger.severe("Warp Load Exception");
         } finally {

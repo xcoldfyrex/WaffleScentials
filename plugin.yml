@@ -2,9 +2,10 @@ name: WaffleScentials
 main: com.cfdigital.wafflescentials.WaffleScentials
 version: 1.0
 author: ColdFyre
-softdepend:
-  - Help
+database: true
+depend:
   - Vault
+  - WaffleLib
 description: WaffleScentials
 commands:
   mute:
@@ -43,9 +44,17 @@ commands:
   kit:
     description: Spawns kit
     usage: /kit <kitname>
-    
-    
-    
-    
-    
-    
+  weather:
+    description: Change weather
+    usage: /weather <state>
+  skull:
+    description: Guess
+    usage: /skull <person>
+  whois:
+    description: Gets information
+    usage: /whois <person>
+  home:
+    usage: /home
+  spawn:
+    description: Return to spawn of world
+    usage: /spawn

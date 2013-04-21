@@ -87,7 +87,11 @@ public class WarpPermissions {
     }
     
     public static boolean extraWarps(Player player) {
-        return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.extrawarps");
+        return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.extra.extrawarps");
+    }
+    
+    public static boolean freeWarps(Player player) {
+        return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.extra.freewarps");
     }
 
 }

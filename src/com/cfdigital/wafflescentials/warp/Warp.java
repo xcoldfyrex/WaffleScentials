@@ -20,9 +20,10 @@ public class Warp {
     public String welcomeMessage;
     public ArrayList<String> permissions;
     public static int nextIndex = 1;
+    public boolean isFree;
 
     public Warp(int index, String name, String creator, String world, double x, int y, double z, int yaw, int pitch, boolean publicAll, String permissions,
-            String welcomeMessage) {
+            String welcomeMessage, boolean isFree) {
         this.index = index;
         this.name = name;
         this.creator = creator;
@@ -35,6 +36,7 @@ public class Warp {
         this.publicAll = publicAll;
         this.permissions = processList(permissions);
         this.welcomeMessage = welcomeMessage;
+        this.isFree = isFree;
         if (index > nextIndex) {
             nextIndex = index;
         }
@@ -52,22 +54,6 @@ public class Warp {
         this.z = creator.getLocation().getZ();
         this.yaw = Math.round(creator.getLocation().getYaw()) % 360;
         this.pitch = Math.round(creator.getLocation().getPitch()) % 360;
-        this.publicAll = true;
-        this.permissions = new ArrayList<String>();
-        this.welcomeMessage = "Welcome to '" + name + "'";
-    }
-
-    public Warp(String name, Location location) {
-        this.index = nextIndex;
-        nextIndex++;
-        this.name = name;
-        this.creator = "No Player";
-        this.world = location.getWorld().getName();
-        this.x = location.getX();
-        this.y = location.getBlockY();
-        this.z = location.getZ();
-        this.yaw = Math.round(location.getYaw()) % 360;
-        this.pitch = Math.round(location.getPitch()) % 360;
         this.publicAll = true;
         this.permissions = new ArrayList<String>();
         this.welcomeMessage = "Welcome to '" + name + "'";

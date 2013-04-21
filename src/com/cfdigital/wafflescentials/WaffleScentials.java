@@ -1,44 +1,47 @@
 package com.cfdigital.wafflescentials;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.milkbowl.vault.chat.Chat;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
-
+import com.cfdigital.wafflelib.PlayerClass;
+import com.cfdigital.wafflelib.WaffleLib;
 import com.cfdigital.wafflescentials.chat.ChatClass;
+import com.cfdigital.wafflescentials.commands.*;
 import com.cfdigital.wafflescentials.listeners.*;
 import com.cfdigital.wafflescentials.util.WaffleLogger;
 import com.cfdigital.wafflescentials.warp.WarpCommands;
 import com.cfdigital.wafflescentials.warp.WarpList;
 import com.cfdigital.wafflescentials.warp.WarpSettings;
+import com.cfidigital.lib.PatPeter.SQLibrary.Database;
+import com.cfidigital.lib.PatPeter.SQLibrary.SQLite;
 
 public class WaffleScentials extends JavaPlugin {
 
 	public static WaffleScentials plugin;
-	public static Permission perms = null;
-	public static Chat chat = null;
-	public static Economy economy = null;
+
 	public WarpList warpList;
 	public static String Prefix = "§6[§aWaffleScentials§6]§f ";
 
-	public static HashMap<String, PlayerClass> wafflePlayers = new HashMap<String, PlayerClass>();
 	public static HashMap<String, Kits> kits = new HashMap<String, Kits>();
 	public static List<Player> dispenserWaiting = new ArrayList<Player>(); 
+
+	public static Database db = null;
+
+	private final Logger log = Logger.getLogger("Minecraft");
 
 	public WaffleScentials() {
 		plugin = this;
@@ -47,103 +50,48 @@ public class WaffleScentials extends JavaPlugin {
 	private final PlayerListener playerListener = new PlayerListener(this);
 	private final BlockListener blockListener = new BlockListener(this);
 
-
+	@Override
 	public void onEnable()
 	{
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(playerListener, this);
 		pm.registerEvents(blockListener, this);
 
-
-		if (setupChat()) {
-
-		}
-
-		if (setupEconomy()) {
-
-		}
-		if (setupPermissions()) {
-			Config config = new Config();
-			if (config.loadSettings()) {
-
-			}
-
+		Config config = new Config();
+		if (config.loadSettings()) {
 			config.loadFilters();
-			if (WarpSettings.loadSettings()) {
+			WarpSettings.loadSettings();
+			getCommand("warp").setExecutor(new WarpCommands(this));
+			getCommand("kit").setExecutor(new Kit(this));
+			getCommand("whois").setExecutor(new Whois(this));
+			getCommand("home").setExecutor(new Home(this));
+			getCommand("spawn").setExecutor(new Spawn(this));
 
-			}
+			warpList = new WarpList(getServer());
+			
+			db = new SQLite(log, "WaffleScentials","wafflescentials","plugins/WaffleScentials/");
+			String tables = "CREATE TABLE IF NOT EXISTS `homes` (`name` TEXT NOT NULL,`x` DOUBLE NOT NULL,`y` DOUBLE NOT NULL,`z` DOUBLE NOT NULL,`world` TEXT NOT NULL);";
+			db.query(tables);
+			Schedulers.setupTasks();
+		} else {
+			WaffleLogger.severe("Can not load config file!");
 		}
 
 		for (Player player : getServer().getOnlinePlayers()) {
 			String myPrefix = getPrefix(player);
 			myPrefix = myPrefix.replace("&", "§");
-			String pn = player.getName();
+			String pn = player.getDisplayName();
 			if (pn.length() > 14) pn = pn.substring(0, 13);
 			player.setPlayerListName(myPrefix+pn);
-			PlayerClass wafflePlayer = new PlayerClass(player);
-			wafflePlayers.put(player.getName(), wafflePlayer);
-			wafflePlayers.get(player.getName()).setLastActive(new Date().getTime() + (Config.afkTimer * 1000));
+			LivingEntity le = (LivingEntity) player;
+			le.setCustomName(getRank(player) + " " + player.getDisplayName());
 		}
-
-		getCommand("warp").setExecutor(new WarpCommands(this));
-		warpList = new WarpList(getServer());
-
-		Schedulers.setupTasks();
-
-
 	}
 
+	@Override
 	public void onDisable() {
-		WaffleLogger.info("Cancelling tasks..");
-		getServer().getScheduler().cancelAllTasks();
-		WaffleLogger.info("Unloaded!");
-	}
-
-
-	private boolean setupEconomy() {
-		if (getServer().getPluginManager().getPlugin("Vault") == null) {
-			//log(Level.INFO, "no vault found!");
-			return false;
-		}
-		RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-		if (rsp == null) {
-			return false;
-		}
-		economy = rsp.getProvider();
-		return economy != null;
-	}
-
-	private boolean setupPermissions() {
-		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
-		perms = rsp.getProvider();
-		return perms != null;
-	}
-
-	private boolean setupChat() {
-		RegisteredServiceProvider<Chat> chatProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.chat.Chat.class);
-		if (chatProvider != null) {
-			chat = chatProvider.getProvider();
-		}
-
-		return (chat != null);
-	}
-
-	public static String getPrefix(Player player) {
-		if (chat.getPlayerPrefix(player) == null) return "";
-		return chat.getPlayerPrefix(player);
-	}
-
-	public String getRank(Player player) {
-		return chat.getPrimaryGroup(player);
-	}
-
-	public boolean hasPermissions(Player p, String s) {
-		if (p == null) return true;
-		if (perms != null) {
-			return perms.has(p, s);
-		} else {
-			return false;
-		}
+		ChatClass.chatFilters.clear();
+		plugin.getServer().getScheduler().cancelTasks(plugin);
 	}
 
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
@@ -156,16 +104,16 @@ public class WaffleScentials extends JavaPlugin {
 		if (commandName.equalsIgnoreCase("mute") && trimmedArgs.length == 1) {
 			if (hasPermissions(player, "wscent.chat.mute")) {
 				if (getPlayer(trimmedArgs[0]) != null) {
-					if (!WaffleScentials.wafflePlayers.get(getPlayerName(trimmedArgs[0])).isMuted()) {
+					if (!getWafflePlayer(getPlayerName(trimmedArgs[0])).isMuted()) {
 						getPlayer(trimmedArgs[0]).sendMessage(Prefix+"§dYou have been muted by " + sender.getName());
 						sender.sendMessage(Prefix+"§dYou have muted " + getPlayer(trimmedArgs[0]).getName());
-						WaffleScentials.wafflePlayers.get(getPlayerName(trimmedArgs[0])).mutePlayer();
+						getWafflePlayer(getPlayerName(trimmedArgs[0])).mutePlayer();
 						return true;
 					}
 					else {
 						getPlayer(trimmedArgs[0]).sendMessage(Prefix+"§dYou have been unmuted by " + sender.getName());
 						sender.sendMessage(Prefix+"§dYou have unmuted " + getPlayerName(trimmedArgs[0]));
-						WaffleScentials.wafflePlayers.get(getPlayerName(trimmedArgs[0])).unmutePlayer();
+						getWafflePlayer(getPlayerName(trimmedArgs[0])).unmutePlayer();
 						return true;
 					}
 				}
@@ -182,9 +130,9 @@ public class WaffleScentials extends JavaPlugin {
 			for (Player person : getServer().getOnlinePlayers()) {
 				String prefix = getPrefix(person);
 				prefix=prefix.replace("&", "§");
-				String playerName = person.getName();
+				String playerName = person.getDisplayName();
 				String AFK = "";
-				if (WaffleScentials.wafflePlayers.get(playerName).isPlayerAFK()) {
+				if (getWafflePlayer(playerName).isPlayerAFK()) {
 					AFK = "[AFK] ";
 				}
 				onlineList = onlineList + AFK + prefix + playerName + "§f, ";
@@ -194,8 +142,9 @@ public class WaffleScentials extends JavaPlugin {
 			return true;
 		}
 
+		// /msg
 		if (commandName.equalsIgnoreCase("msg") && trimmedArgs.length >= 2) {
-			if (WaffleScentials.wafflePlayers.get(player.getName()).isMuted()) {
+			if (getWafflePlayer(player.getName()).isMuted()) {
 				player.sendMessage(WaffleScentials.Prefix+"§dYou are muted and cannot do this");
 			} else {
 				if (hasPermissions(player, "wscent.chat.msg")) {
@@ -207,7 +156,7 @@ public class WaffleScentials extends JavaPlugin {
 						targetPrefix = targetPrefix.replace("&", "§");
 						targetPlayer.sendMessage(myPrefix + player.getName() + "§f -> me: " + ChatClass.join(trimmedArgs, " ", 1));
 						player.sendMessage("me -> " + targetPrefix + targetPlayer.getName() + "§f: " + ChatClass.join(trimmedArgs, " ", 1));
-						wafflePlayers.get(targetPlayer.getName()).setLastMessager(player.getName());
+						getWafflePlayer(targetPlayer.getName()).setLastMessager(player.getName());
 						return true;
 					}
 					else {
@@ -218,22 +167,22 @@ public class WaffleScentials extends JavaPlugin {
 			}
 		}
 
+		// /me
 		if (commandName.equalsIgnoreCase("me") && trimmedArgs.length >= 1) {
-			if (WaffleScentials.wafflePlayers.get(player.getName()).isMuted()) {
+			if (getWafflePlayer(player.getName()).isMuted()) {
 				player.sendMessage(WaffleScentials.Prefix+"§dYou are muted and cannot do this!");
 				return true;
 			} else {
 				if (hasPermissions(player, "wscent.chat.msg")) {
 					String myPrefix = getPrefix(player);
 					myPrefix = myPrefix.replace("&", "§");
-					getServer().broadcastMessage("§e** " + myPrefix + player.getName() + "§f " + ChatClass.join(trimmedArgs, " ", 0));
+					getServer().broadcastMessage("§e** " + myPrefix + player.getDisplayName() + "§f " + ChatClass.join(trimmedArgs, " ", 0));
 					return true;
 				}
 			}
 		}
 
 		// /say
-
 		if (commandName.equalsIgnoreCase("say") && trimmedArgs.length >= 1) {
 			if (hasPermissions(player, "wscent.chat.broadcast")) {
 				String message = ChatClass.join(trimmedArgs, " ", 0);
@@ -246,57 +195,35 @@ public class WaffleScentials extends JavaPlugin {
 			return true;
 		}
 
-		// /kit
-		if (commandName.equalsIgnoreCase("kit")) {
-			if (trimmedArgs.length == 0) {
-				if (hasPermissions(player, "wscent.kits")) {
-					sender.sendMessage(Prefix + "Kits:");
-					for (String kit : kits.keySet()) {
-						sender.sendMessage(kit);
-					}
+		// /weather
+		if (commandName.equalsIgnoreCase("weather") && trimmedArgs.length == 1) {
+			if (hasPermissions(player, "wscent.world.weather")) {
+				boolean newState = false;
+				if (trimmedArgs[0].equalsIgnoreCase("clear")) {
+					player.sendMessage(WaffleScentials.Prefix+"Changed weather to clear!");
+					newState = false;
 				}
-			} 
-			else {
-				if (kits.containsKey(trimmedArgs[0])) {
-					if (hasPermissions(player, "wscent.kits."+trimmedArgs[0])) {
-						long lastUsed = WaffleScentials.wafflePlayers.get(player.getName()).getKitLastUsed(trimmedArgs[0]);
-						int coolDown = kits.get(trimmedArgs[0]).getCoolDown();
-						if ((System.currentTimeMillis() / 1000L - lastUsed) < coolDown) {
-							sender.sendMessage(Prefix + "§dYou spawned this kit too recently!");
-							return true;
-						}
-						WaffleScentials.wafflePlayers.get(player.getName()).setKitLastUsed(trimmedArgs[0], System.currentTimeMillis() / 1000L);
-						List<ItemStack> items = new ArrayList<ItemStack>();
-						items.addAll(kits.get(trimmedArgs[0]).getItemStack());
-						int x = 0;
-						while (x != items.size()) {
-							ItemStack is = new ItemStack(items.get(x));
-							ItemMeta meta = is.getItemMeta();
-							ArrayList<String> lore = new ArrayList<String>();
-							lore.add(ChatColor.BOLD + "" + ChatColor.RED + "KIT ITEM");
-							lore.add(ChatColor.BOLD + "" + ChatColor.GOLD + "Owned by: " + sender.getName());
-							long now = System.currentTimeMillis() / 1000L;
-							Date d = new Date(now);  
-							lore.add(ChatColor.BOLD + "" + ChatColor.GOLD + "Spawned at: " + d);
-							lore.add(ChatColor.BOLD + "" + ChatColor.RED + "IF THIS ITEM DOES NOT BELONG TO YOU");
-							lore.add(ChatColor.BOLD + "" + ChatColor.RED + "THEN DISCARD THIS SPAWNED ITEM.");
-							meta.setLore(lore);
-							is.setItemMeta(meta);
-							player = (Player) sender;
-							player.getInventory().addItem(is);
-							x++;
-						}
-						sender.sendMessage(Prefix + "§dYou have been given kit: " + trimmedArgs[0]);
-					}
-					else {
-						sender.sendMessage(Prefix + "§dNo permission to spawn this kit!");
-					}
-
-
+				else if (trimmedArgs[0].equalsIgnoreCase("rain")) {
+					player.sendMessage(WaffleScentials.Prefix+"Changed weather to storm! You dick!");
+					newState = true;
 				}
+
 				else {
-					sender.sendMessage(Prefix + "§dNo such kit!");
+					player.sendMessage(WaffleScentials.Prefix+" [rain] | [clear]");
 				}
+				player.getWorld().setStorm(newState);
+			}
+			return true;
+		}
+
+		// /skull
+		if (commandName.equalsIgnoreCase("skull") && trimmedArgs.length == 1) {
+			if (hasPermissions(player, "wscent.misc.skull")) {
+				ItemStack item = new ItemStack(Material.SKULL_ITEM, 1, (byte) 3);
+				ItemMeta itemMeta = item.getItemMeta();
+				((SkullMeta) itemMeta).setOwner(trimmedArgs[0]);
+				item.setItemMeta(itemMeta);
+				player.getWorld().dropItemNaturally(player.getLocation(), item);
 			}
 			return true;
 		}
@@ -305,7 +232,7 @@ public class WaffleScentials extends JavaPlugin {
 		if (commandName.equalsIgnoreCase("heal")) {
 			if (player == null) return true;
 			if (hasPermissions(player, "wscent.heal")) {
-				long lh = wafflePlayers.get(player.getName()).getLastHeal();
+				long lh = getWafflePlayer(player.getName()).getLastHeal();
 				long ch = System.currentTimeMillis() / 1000L;
 				if ((ch - lh) <= 300) {
 					sender.sendMessage(Prefix + "§dYou cannot heal this often!");
@@ -313,7 +240,7 @@ public class WaffleScentials extends JavaPlugin {
 				}
 				player.setHealth(20);
 				player.setFoodLevel(20);
-				wafflePlayers.get(player.getName()).setLastHeal(ch);
+				getWafflePlayer(player.getDisplayName()).setLastHeal(ch);
 				sender.sendMessage(Prefix + "§dHealed!");
 			}
 			return true;
@@ -321,7 +248,7 @@ public class WaffleScentials extends JavaPlugin {
 
 
 		if (commandName.equalsIgnoreCase("afk")) {
-			if (WaffleScentials.wafflePlayers.get(player.getName()).isMuted()) {
+			if (getWafflePlayer(player.getDisplayName()).isMuted()) {
 				player.sendMessage(WaffleScentials.Prefix+"§dYou are muted and cannot do this");
 				return true;
 			} else {
@@ -333,22 +260,21 @@ public class WaffleScentials extends JavaPlugin {
 					String myPrefix = getPrefix(player);
 					myPrefix = myPrefix.replace("&", "§");
 					ChatClass.setTabName(player, "[AFK]"+myPrefix);
-					getServer().broadcastMessage("§e** " + myPrefix + player.getName() + "§f is now AFK: " + message);
-					PlayerClass afkPlayer = wafflePlayers.get(player.getName());
-					afkPlayer.setAFK(message);
+					getServer().broadcastMessage("§e** " + myPrefix + player.getDisplayName() + "§f is now AFK: " + message);
+					getWafflePlayer(player.getDisplayName()).setAFK(message);
+
 					return true;
 				}
 			}
 		}
 
-
 		if ((commandName.equalsIgnoreCase("r") || commandName.equalsIgnoreCase("reply")) && trimmedArgs.length >= 1) {
-			if (WaffleScentials.wafflePlayers.get(getPlayerName(player.getName())).isMuted()) {
+			if (getWafflePlayer(getPlayerName(player.getDisplayName())).isMuted()) {
 				player.sendMessage(WaffleScentials.Prefix+"§aYou are muted and cannot do this");
 			} else {
 				if (hasPermissions(player, "wscent.chat.msg")) {
 					String lastMessager = null;
-					if ((lastMessager = wafflePlayers.get(player.getName()).getLastMessager()) != null) {
+					if ((lastMessager = getWafflePlayer(player.getDisplayName()).getLastMessager()) != null) {
 						if (getPlayer(lastMessager).isOnline()) {
 							Player targetPlayer = getPlayer(lastMessager);
 							String myPrefix = getPrefix(player);
@@ -356,8 +282,8 @@ public class WaffleScentials extends JavaPlugin {
 							myPrefix = myPrefix.replace("&", "§");
 							targetPrefix = targetPrefix.replace("&", "§");
 							targetPlayer.sendMessage(myPrefix + player.getName() + "§f -> me: " + ChatClass.join(trimmedArgs, " ",0));
-							player.sendMessage("me -> " + targetPrefix + targetPlayer.getName() + "§f: " + ChatClass.join(trimmedArgs, " ", 0));
-							wafflePlayers.get(targetPlayer.getName()).setLastMessager(player.getName());
+							player.sendMessage("me -> " + targetPrefix + targetPlayer.getDisplayName() + "§f: " + ChatClass.join(trimmedArgs, " ", 0));
+							getWafflePlayer(targetPlayer.getDisplayName()).setLastMessager(player.getDisplayName());
 							return true;
 						} else {
 							player.sendMessage(Prefix + "§dPlayer is not online!");
@@ -388,8 +314,14 @@ public class WaffleScentials extends JavaPlugin {
 		return false;
 	}
 
-
-
+	public boolean hasPermissions(Player p, String s) {
+		if (p == null) return true;
+		if (WaffleLib.perms != null) {
+			return WaffleLib.perms.has(p, s);
+		} else {
+			return false;
+		}
+	}
 
 	public Player getPlayer(String playerName) {
 		Player targetPlayer = getServer().getPlayer(playerName);
@@ -397,10 +329,29 @@ public class WaffleScentials extends JavaPlugin {
 		return null;
 	}
 
+	public PlayerClass getWafflePlayer(String playerName) {
+		if (WaffleLib.wafflePlayers.containsKey(playerName)) {
+			return WaffleLib.wafflePlayers.get(playerName);
+		}
+		return null;
+	}
+
 	public String getPlayerName(String playerName) {
-		String targetPlayer = getServer().getPlayer(playerName).getName();
+		String targetPlayer = getServer().getPlayer(playerName).getDisplayName();
 		if (targetPlayer != null) return targetPlayer;
 		return null;
 	}
 
+	public static String getPrefix(Player player) {
+		if (WaffleLib.chat.getPlayerPrefix(player) == null) return "";
+		return WaffleLib.chat.getPlayerPrefix(player);
+	}
+
+	public String getRank(Player player) {
+		return WaffleLib.chat.getPrimaryGroup(player);
+	}
+	
+	public static int getLevel(String player) {
+		return 1;
+	}
 }

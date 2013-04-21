@@ -281,7 +281,7 @@ public class WarpCommands  implements CommandExecutor {
                         messages.add(ChatColor.RED + "/warp search [query]" + ChatColor.WHITE + "  -  Search for " + ChatColor.GRAY + "[query]");
                     }
                     if (WarpPermissions.give(player)) {
-                        messages.add(ChatColor.RED + "/warp give [player] [name[" + ChatColor.WHITE + "  -  Give " + ChatColor.GRAY + "[player]"
+                        messages.add(ChatColor.RED + "/warp give [player] [name]" + ChatColor.WHITE + "  -  Give " + ChatColor.GRAY + "[player]"
                                 + ChatColor.WHITE + " your " + ChatColor.GRAY + "[name]");
                     }
                     if (WarpPermissions.invite(player)) {
@@ -289,7 +289,7 @@ public class WarpCommands  implements CommandExecutor {
                                 + ChatColor.WHITE + " to " + ChatColor.GRAY + "[name]");
                     }
                     if (WarpPermissions.uninvite(player)) {
-                        messages.add(ChatColor.RED + "/warp uninvite [player] [name[" + ChatColor.WHITE + "  -  Uninvite " + ChatColor.GRAY + "[player]"
+                        messages.add(ChatColor.RED + "/warp uninvite [player] [name]" + ChatColor.WHITE + "  -  Uninvite " + ChatColor.GRAY + "[player]"
                                 + ChatColor.WHITE + " to " + ChatColor.GRAY + "[name]");
                     }
                     if (WarpPermissions.canPublic(player)) {

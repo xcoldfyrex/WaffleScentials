@@ -5,6 +5,7 @@ import java.util.Date;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import com.cfdigital.wafflelib.PlayerClass;
 import com.cfdigital.wafflescentials.chat.ChatClass;
 
 public class Schedulers {
@@ -17,11 +18,9 @@ public class Schedulers {
 			public void run() {
 				for (Player player : plugin.getServer().getOnlinePlayers()) {
 					if (player == null) continue;
-					if (!WaffleScentials.wafflePlayers.containsKey(player.getName())) continue;
-					PlayerClass afkPlayer = WaffleScentials.wafflePlayers.get(player.getName());
-					if (afkPlayer.isPlayerAFK())
-						continue;
-
+					if (WaffleScentials.plugin.getWafflePlayer(player.getName()) == null) continue;
+					PlayerClass afkPlayer = WaffleScentials.plugin.getWafflePlayer(player.getName());
+					if (afkPlayer.isPlayerAFK()) continue;
 					if (new Date().getTime() - (Config.afkTimer * 1000) > afkPlayer.getLastActive()) {
 						String myPrefix = WaffleScentials.getPrefix(player);
 						myPrefix = myPrefix.replace("&", "§");

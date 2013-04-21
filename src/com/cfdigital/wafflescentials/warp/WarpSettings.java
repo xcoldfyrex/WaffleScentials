@@ -25,6 +25,7 @@ public class WarpSettings {
     public static String mySQLuname;
     public static String mySQLpass;
     public static String mySQLconn;
+    public static double warpFee;
 
     public static boolean opPermissions;
     
@@ -60,6 +61,7 @@ public class WarpSettings {
 			mySQLuname = config.getString("mySQLuname");
 			mySQLpass = config.getString("mySQLpass");
         	extraWarps = config.getInt("extraWarps");
+        	warpFee = config.getDouble("warpFee");
 
 			opPermissions = config.getBoolean("opPermissions");
 			return true;

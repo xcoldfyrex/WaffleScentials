@@ -3,8 +3,7 @@ package com.cfdigital.wafflescentials.listeners;
 import java.util.Iterator;
 import java.util.List;
 
-
-import net.minecraft.server.v1_4_R1.WorldChunkManager;
+import net.minecraft.server.v1_5_R2.WorldChunkManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -12,7 +11,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.Dispenser;
-import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
+import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,6 +22,7 @@ import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -37,7 +38,19 @@ public class BlockListener implements Listener	{
 	public BlockListener(WaffleScentials instance) {
 		plugin = instance;
 	}
-	
+
+	@EventHandler
+	public void onSignChange(SignChangeEvent event) {
+		Sign sign = (Sign) event.getBlock().getState();
+		if (event.getPlayer().hasPermission("wscent.chat.colorsign")) {
+			for (int i = 0; i < 4; i++) {
+				event.setLine(i, ChatColor.translateAlternateColorCodes('&', event.getLine(i)));
+			}
+			sign.update();
+		}
+	}
+
+
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockPhsyics(BlockPhysicsEvent event)
 	{	
@@ -52,8 +65,7 @@ public class BlockListener implements Listener	{
 			if (event.getBlock().getType() == Material.WATER) {
             	event.setCancelled(true);
         	}
-		}
-		
+		}	
 	}
 	
     @EventHandler(priority = EventPriority.HIGH)
@@ -124,18 +136,17 @@ public class BlockListener implements Listener	{
 				return;
 			}
 		}
+		
 		if (dispenserList.contains(block.getLocation())) {
 			player.sendMessage(WaffleScentials.Prefix+"Unregistered unlimited dispenser!");
 			dispenserList.remove(block.getLocation());
 		}
+		
 		if (block.getType().equals(Material.DISPENSER)) {
 			Dispenser dispenser = (Dispenser) event.getBlock().getState();
 			dispenser.getInventory().clear();
 		}
 	}
-
-
-
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onDispense(BlockDispenseEvent event) {
