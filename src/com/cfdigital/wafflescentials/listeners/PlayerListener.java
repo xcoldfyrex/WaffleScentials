@@ -230,8 +230,8 @@ public class PlayerListener implements Listener	{
 			if (im.get(1).contains(event.getPlayer().getDisplayName())) return;
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.GRAY + "This is a kit item and you are not permitted to pick it up.");
-			event.getPlayer().sendMessage(ChatColor.GRAY + "The item will now despawn.");
-			event.getItem().remove();
+			//event.getPlayer().sendMessage(ChatColor.GRAY + "The item will now despawn.");
+			//event.getItem().remove();
 		}
 	} 
 

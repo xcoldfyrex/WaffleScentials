@@ -3,7 +3,7 @@ package com.cfdigital.wafflescentials.listeners;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.server.v1_5_R2.WorldChunkManager;
+import net.minecraft.server.v1_5_R3.WorldChunkManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -12,7 +12,7 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,6 +22,7 @@ import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.inventory.ItemStack;
@@ -50,7 +51,15 @@ public class BlockListener implements Listener	{
 		}
 	}
 
-
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onBlockPlace(BlockPlaceEvent event) {
+    	if (!plugin.hasPermissions(event.getPlayer(), "wscent.world.modify")) {
+    		event.getPlayer().sendMessage(ChatColor.RED + "No permission to do this.");
+    		event.setCancelled(true);
+    		return;
+    	}
+	}
+	
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockPhsyics(BlockPhysicsEvent event)
 	{	
@@ -70,6 +79,11 @@ public class BlockListener implements Listener	{
 	
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
+    	if (!plugin.hasPermissions(event.getPlayer(), "wscent.world.modify")) {
+    		event.getPlayer().sendMessage(ChatColor.RED + "No permission to do this.");
+    		event.setCancelled(true);
+    		return;
+    	}
     	int x = event.getPlayer().getLocation().getBlockX();
     	int z = event.getPlayer().getLocation().getBlockZ();
 		WorldChunkManager biomeManager = ((CraftWorld) event.getPlayer().getLocation().getWorld()).getHandle().getWorldChunkManager();
@@ -82,6 +96,7 @@ public class BlockListener implements Listener	{
         	}
 		}
     }
+    
 	@EventHandler(priority = EventPriority.HIGH)
     public void onBlockFade(BlockFadeEvent event) {
 		int x = event.getBlock().getX();
@@ -94,8 +109,14 @@ public class BlockListener implements Listener	{
         	}
 		}
    }
+	
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockDamageEvent(BlockDamageEvent event) {
+    	if (!plugin.hasPermissions(event.getPlayer(), "wscent.world.modify")) {
+    		event.getPlayer().sendMessage(ChatColor.RED + "No permission to do this.");
+    		event.setCancelled(true);
+    		return;
+    	}
 		final Block block;
 		final Player player;
 		block = event.getBlock();
@@ -120,6 +141,11 @@ public class BlockListener implements Listener	{
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onBlockBreakEvent(BlockBreakEvent event) {
+    	if (!plugin.hasPermissions(event.getPlayer(), "wscent.world.modify")) {
+    		event.getPlayer().sendMessage(ChatColor.RED + "No permission to do this.");
+    		event.setCancelled(true);
+    		return;
+    	}
 		final Block block = event.getBlock();
 		final Player player;
 		player = event.getPlayer();

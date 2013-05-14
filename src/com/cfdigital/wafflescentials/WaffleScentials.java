@@ -186,11 +186,9 @@ public class WaffleScentials extends JavaPlugin {
 		if (commandName.equalsIgnoreCase("say") && trimmedArgs.length >= 1) {
 			if (hasPermissions(player, "wscent.chat.broadcast")) {
 				String message = ChatClass.join(trimmedArgs, " ", 0);
-				String pn = "[CONSOLE]";
-				if (!(player == null))pn = player.getDisplayName();
-				this.getServer().broadcastMessage(ChatColor.GOLD + "[" + ChatColor.RED + "Global message from " + pn + ChatColor.GOLD + "]");
-				this.getServer().broadcastMessage(message);
-				this.getServer().broadcastMessage(ChatColor.GOLD + "----------- End of broadcast -----------");
+				String pn = "CONSOLE";
+				if (!(player == null))pn = player.getName();
+				this.getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + "[" + pn + ChatColor.LIGHT_PURPLE + "] " + message);
 			}
 			return true;
 		}
