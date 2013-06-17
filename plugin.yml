@@ -12,6 +12,7 @@ commands:
     description: Mutes the fucker
     usage: /mute <person>
   msg:
+    aliases: [m]
     description: Message person
     usage: /msg <person> <message>
   list:
@@ -21,11 +22,9 @@ commands:
     description: Mark self as AFK
     usage: /afk <reason>
   reply:
+    aliases: [r]
     description: Reply
     usage: /reply <message>
-  r:
-    description: Reply
-    usage: /r <message>
   me:
     description: Emotion
     usage: /me <action>
@@ -58,3 +57,6 @@ commands:
   spawn:
     description: Return to spawn of world
     usage: /spawn
+  enchant:
+    description: Adds enchment to item in hand
+    usage: /enchant <player> <enchantment> <level>

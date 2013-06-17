@@ -17,8 +17,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.cfdigital.wafflelib.PlayerClass;
-import com.cfdigital.wafflelib.WaffleLib;
 import com.cfdigital.wafflescentials.chat.ChatClass;
 import com.cfdigital.wafflescentials.commands.*;
 import com.cfdigital.wafflescentials.listeners.*;
@@ -66,9 +64,12 @@ public class WaffleScentials extends JavaPlugin {
 			getCommand("whois").setExecutor(new Whois(this));
 			getCommand("home").setExecutor(new Home(this));
 			getCommand("spawn").setExecutor(new Spawn(this));
+			getCommand("enchant").setExecutor(new Enchant(this));
+			getCommand("msg").setExecutor(new Messaging(this));
+			getCommand("reply").setExecutor(new Messaging(this));
 
 			warpList = new WarpList(getServer());
-			
+
 			db = new SQLite(log, "WaffleScentials","wafflescentials","plugins/WaffleScentials/");
 			String tables = "CREATE TABLE IF NOT EXISTS `homes` (`name` TEXT NOT NULL,`x` DOUBLE NOT NULL,`y` DOUBLE NOT NULL,`z` DOUBLE NOT NULL,`world` TEXT NOT NULL);";
 			db.query(tables);
@@ -94,6 +95,14 @@ public class WaffleScentials extends JavaPlugin {
 		plugin.getServer().getScheduler().cancelTasks(plugin);
 	}
 
+	public void broadcastToPrivilaged(String message, String perms) {
+		for (Player player : getServer().getOnlinePlayers()) {
+			if (hasPermissionsSilent(player, perms)) {
+				player.sendMessage(message);
+			}
+		}
+	}
+
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
 		String commandName = command.getName().toLowerCase();
 		String[] trimmedArgs = args;
@@ -105,21 +114,20 @@ public class WaffleScentials extends JavaPlugin {
 			if (hasPermissions(player, "wscent.chat.mute")) {
 				if (getPlayer(trimmedArgs[0]) != null) {
 					if (!getWafflePlayer(getPlayerName(trimmedArgs[0])).isMuted()) {
-						getPlayer(trimmedArgs[0]).sendMessage(Prefix+"§dYou have been muted by " + sender.getName());
-						sender.sendMessage(Prefix+"§dYou have muted " + getPlayer(trimmedArgs[0]).getName());
+						getPlayer(trimmedArgs[0]).sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "You have been muted");
+						sender.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "ou have muted " + getPlayer(trimmedArgs[0]).getName());
 						getWafflePlayer(getPlayerName(trimmedArgs[0])).mutePlayer();
 						return true;
 					}
 					else {
-						getPlayer(trimmedArgs[0]).sendMessage(Prefix+"§dYou have been unmuted by " + sender.getName());
-						sender.sendMessage(Prefix+"§dYou have unmuted " + getPlayerName(trimmedArgs[0]));
+						getPlayer(trimmedArgs[0]).sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "You have been unmuted");
+						sender.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "You have unmuted " + getPlayerName(trimmedArgs[0]));
 						getWafflePlayer(getPlayerName(trimmedArgs[0])).unmutePlayer();
 						return true;
 					}
 				}
 
-			}
-			else {
+			} else {
 				return true;
 			}
 		}
@@ -142,35 +150,12 @@ public class WaffleScentials extends JavaPlugin {
 			return true;
 		}
 
-		// /msg
-		if (commandName.equalsIgnoreCase("msg") && trimmedArgs.length >= 2) {
-			if (getWafflePlayer(player.getName()).isMuted()) {
-				player.sendMessage(WaffleScentials.Prefix+"§dYou are muted and cannot do this");
-			} else {
-				if (hasPermissions(player, "wscent.chat.msg")) {
-					if((getPlayer(trimmedArgs[0]) != null) &&  getPlayer(trimmedArgs[0]).isOnline()) {
-						Player targetPlayer = getPlayer(trimmedArgs[0]);
-						String myPrefix = getPrefix(player);
-						String targetPrefix = getPrefix(targetPlayer);
-						myPrefix = myPrefix.replace("&", "§");
-						targetPrefix = targetPrefix.replace("&", "§");
-						targetPlayer.sendMessage(myPrefix + player.getName() + "§f -> me: " + ChatClass.join(trimmedArgs, " ", 1));
-						player.sendMessage("me -> " + targetPrefix + targetPlayer.getName() + "§f: " + ChatClass.join(trimmedArgs, " ", 1));
-						getWafflePlayer(targetPlayer.getName()).setLastMessager(player.getName());
-						return true;
-					}
-					else {
-						player.sendMessage(Prefix + "§dThat player is not online!");
-						return true;
-					}
-				}
-			}
-		}
+
 
 		// /me
 		if (commandName.equalsIgnoreCase("me") && trimmedArgs.length >= 1) {
 			if (getWafflePlayer(player.getName()).isMuted()) {
-				player.sendMessage(WaffleScentials.Prefix+"§dYou are muted and cannot do this!");
+				player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this!");
 				return true;
 			} else {
 				if (hasPermissions(player, "wscent.chat.msg")) {
@@ -198,16 +183,16 @@ public class WaffleScentials extends JavaPlugin {
 			if (hasPermissions(player, "wscent.world.weather")) {
 				boolean newState = false;
 				if (trimmedArgs[0].equalsIgnoreCase("clear")) {
-					player.sendMessage(WaffleScentials.Prefix+"Changed weather to clear!");
+					player.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "Changed weather to clear!");
 					newState = false;
 				}
 				else if (trimmedArgs[0].equalsIgnoreCase("rain")) {
-					player.sendMessage(WaffleScentials.Prefix+"Changed weather to storm! You dick!");
+					player.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "Changed weather to storm! You dick!");
 					newState = true;
 				}
 
 				else {
-					player.sendMessage(WaffleScentials.Prefix+" [rain] | [clear]");
+					player.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + " [rain] | [clear]");
 				}
 				player.getWorld().setStorm(newState);
 			}
@@ -233,13 +218,13 @@ public class WaffleScentials extends JavaPlugin {
 				long lh = getWafflePlayer(player.getName()).getLastHeal();
 				long ch = System.currentTimeMillis() / 1000L;
 				if ((ch - lh) <= 300) {
-					sender.sendMessage(Prefix + "§dYou cannot heal this often!");
+					sender.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You cannot heal this often");
 					return true;
 				}
 				player.setHealth(20);
 				player.setFoodLevel(20);
 				getWafflePlayer(player.getDisplayName()).setLastHeal(ch);
-				sender.sendMessage(Prefix + "§dHealed!");
+				sender.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "Healed");
 			}
 			return true;
 		}
@@ -247,7 +232,7 @@ public class WaffleScentials extends JavaPlugin {
 
 		if (commandName.equalsIgnoreCase("afk")) {
 			if (getWafflePlayer(player.getDisplayName()).isMuted()) {
-				player.sendMessage(WaffleScentials.Prefix+"§dYou are muted and cannot do this");
+				player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this");
 				return true;
 			} else {
 				if (hasPermissions(player, "wscent.chat.msg")) {
@@ -258,7 +243,7 @@ public class WaffleScentials extends JavaPlugin {
 					String myPrefix = getPrefix(player);
 					myPrefix = myPrefix.replace("&", "§");
 					ChatClass.setTabName(player, "[AFK]"+myPrefix);
-					getServer().broadcastMessage("§e** " + myPrefix + player.getDisplayName() + "§f is now AFK: " + message);
+					getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + player.getName() + " is now AFK: " + message);
 					getWafflePlayer(player.getDisplayName()).setAFK(message);
 
 					return true;
@@ -266,37 +251,6 @@ public class WaffleScentials extends JavaPlugin {
 			}
 		}
 
-		if ((commandName.equalsIgnoreCase("r") || commandName.equalsIgnoreCase("reply")) && trimmedArgs.length >= 1) {
-			if (getWafflePlayer(getPlayerName(player.getDisplayName())).isMuted()) {
-				player.sendMessage(WaffleScentials.Prefix+"§aYou are muted and cannot do this");
-			} else {
-				if (hasPermissions(player, "wscent.chat.msg")) {
-					String lastMessager = null;
-					if ((lastMessager = getWafflePlayer(player.getDisplayName()).getLastMessager()) != null) {
-						if (getPlayer(lastMessager).isOnline()) {
-							Player targetPlayer = getPlayer(lastMessager);
-							String myPrefix = getPrefix(player);
-							String targetPrefix = getPrefix(targetPlayer);
-							myPrefix = myPrefix.replace("&", "§");
-							targetPrefix = targetPrefix.replace("&", "§");
-							targetPlayer.sendMessage(myPrefix + player.getName() + "§f -> me: " + ChatClass.join(trimmedArgs, " ",0));
-							player.sendMessage("me -> " + targetPrefix + targetPlayer.getDisplayName() + "§f: " + ChatClass.join(trimmedArgs, " ", 0));
-							getWafflePlayer(targetPlayer.getDisplayName()).setLastMessager(player.getDisplayName());
-							return true;
-						} else {
-							player.sendMessage(Prefix + "§dPlayer is not online!");
-							return true;
-						}
-
-					} else {
-						player.sendMessage(Prefix + "§dNoone has messaged you yet!");
-						return true;
-					}
-				}
-
-			}
-
-		}
 
 		//unlimited dispenser
 		if (commandName.equalsIgnoreCase("ud")) {
@@ -313,6 +267,21 @@ public class WaffleScentials extends JavaPlugin {
 	}
 
 	public boolean hasPermissions(Player p, String s) {
+		if (p == null) return true;
+		if (WaffleLib.perms != null) {
+			if (WaffleLib.perms.has(p, s)) {
+				return true;
+			} else {
+				p.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "Insufficient permission for this command");
+				return false;
+			}
+		} else {
+			p.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "Insufficient permission for this command");
+			return false;
+		}
+	}
+	
+	public boolean hasPermissionsSilent(Player p, String s) {
 		if (p == null) return true;
 		if (WaffleLib.perms != null) {
 			return WaffleLib.perms.has(p, s);
@@ -348,8 +317,5 @@ public class WaffleScentials extends JavaPlugin {
 	public String getRank(Player player) {
 		return WaffleLib.chat.getPrimaryGroup(player);
 	}
-	
-	public static int getLevel(String player) {
-		return 1;
-	}
+
 }

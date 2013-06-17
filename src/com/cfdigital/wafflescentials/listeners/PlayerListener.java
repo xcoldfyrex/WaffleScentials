@@ -1,10 +1,14 @@
 package com.cfdigital.wafflescentials.listeners;
 
+import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 import org.bukkit.ChatColor;
 
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -33,6 +37,8 @@ import com.cfdigital.wafflescentials.util.WaffleLogger;
 public class PlayerListener implements Listener	{
 
 	final WaffleScentials plugin;
+	private ArrayList<String> fixedLines = new ArrayList<String>();
+	private int linesPerPage = 9;
 
 	public PlayerListener(WaffleScentials instance) {
 		plugin = instance;
@@ -43,24 +49,32 @@ public class PlayerListener implements Listener	{
 		if (event.isCancelled()) return;
 		final Player player = event.getPlayer();
 		final String kickReason = event.getReason();
-		event.setLeaveMessage("§e" + player.getDisplayName() + " was kicked! Reason: " + kickReason);		
+		event.setLeaveMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + player.getDisplayName() + " was kicked! Reason: " + kickReason);		
 	}
 
-	public void checkPlayerSpam(AsyncPlayerChatEvent event){
-		//Player player = event.getPlayer();
-		//String message = event.getMessage();
-		//long lastMessage = plugin.getWafflePlayer(player.getDisplayName()).getLastMessageSent();
-		//String
-
-	}
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerChat(AsyncPlayerChatEvent event) {	
 
 		String message;
 		Player player = event.getPlayer();
 		message = event.getMessage();
+		
+		//are they spamming?
+		plugin.getWafflePlayer(player.getDisplayName()).incrMessageCount();
+		int messageCount = plugin.getWafflePlayer(player.getDisplayName()).getMessageCount();
+		if (messageCount >= Config.maxMessages) {
+			event.setCancelled(true);
+			if (messageCount >= Config.maxMessagesToKick) {
+				player.kickPlayer("Chat spamming");
+			}
+			player.sendMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.RED + "You have been auto muted for spamming");
+			Log.warn(messageCount);
+			return;
+		}
+		long currTime = System.currentTimeMillis() / 1000L;
 
-		//start with any chat filtering, first
+
+		//then see if any chat filtering
 		boolean matched = false;
 		if (!(ChatClass.chatFilters.size() == 0)) { 
 			for (String regex : ChatClass.chatFilters.keySet()) {
@@ -102,42 +116,46 @@ public class PlayerListener implements Listener	{
 			String myPrefix = WaffleScentials.getPrefix(player);
 			myPrefix = myPrefix.replace("&", "§");
 			ChatClass.setTabName(player, myPrefix);
-			WaffleScentials.plugin.getServer().broadcastMessage("§e** " + myPrefix + player.getDisplayName() + "§f is no longer AFK");
+			plugin.getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + player.getName() + " is no longer AFK");
 			afkPlayer.unsetAFK();
 		}
 		if (plugin.getWafflePlayer(player.getDisplayName()).isMuted()){
-			player.sendMessage(WaffleScentials.Prefix+"You are muted and cannot do this");
+			player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this");
 			event.setCancelled(true);
 		}
 		if (event.isCancelled()) return;
 		afkPlayer.setLastActive(new Date().getTime());
-		message = message.replace("§", "&");
-		message = message.replace("%", "%%");		
+		message = ChatColor.stripColor(message);
+		//message = message.replace("%", "%%");		
 
 		if (player.hasPermission("wscent.chat.colors")) {
-			message = message.replace("&", "§");
+			final char code = '&';
+			message = ChatColor.translateAlternateColorCodes(code, message);
 		}
 
 		String playerName = player.getDisplayName();
 		String prefix = WaffleScentials.getPrefix(player);
 		String chatFormat = Config.chatFormat;
 		String playerRank = plugin.getRank(player);
-		int playerLevelTemp = WaffleScentials.getLevel(player.getName());
-		String playerLevel = String.valueOf(playerLevelTemp);
 
-		chatFormat = chatFormat.replace("%player%", playerName);
-		chatFormat = chatFormat.replace("%prefix%", prefix);
-		chatFormat = chatFormat.replace("%rank%", playerRank);
-		chatFormat = chatFormat.replace("[waffle]", playerLevel);
+		chatFormat = chatFormat.replace("[player]", playerName);
+		chatFormat = chatFormat.replace("[prefix]", prefix);
+		chatFormat = chatFormat.replace("[rank]", playerRank);
 		chatFormat = chatFormat.replace("&", "§");
-		chatFormat = chatFormat.replace("%message%", message);
-
-		event.setFormat(chatFormat);
-		//if (event.isCancelled()) return;
+		
+		String format = event.getFormat();
+		format = (format.replace("%1$s", chatFormat + ChatColor.RESET));
+		
+		event.setFormat(format);
+		event.setMessage(message);
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+		int page = 1;
+		String[] split = event.getMessage().split(" ");
+		int count = split.length;
+		int lastInput = count - 1;
 		Player player = event.getPlayer();
 		if (event.isCancelled()) return;
 		PlayerClass afkPlayer = plugin.getWafflePlayer(player.getDisplayName());
@@ -146,44 +164,49 @@ public class PlayerListener implements Listener	{
 		String command = event.getMessage();
 		if (command.startsWith("/tell") || command.startsWith("/me") || command.startsWith("/msg") || command.startsWith("/reply")) {
 			if (plugin.getWafflePlayer(player.getDisplayName()).isMuted()){
-				player.sendMessage(WaffleScentials.Prefix+"You are muted and cannot do this");
+				player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this");
 				event.setCancelled(true);
 			}
 		}
 
-		if (command.startsWith("/register") || command.startsWith("/help") || command.startsWith("/rules") || command.startsWith("/vote") || command.startsWith("/?") ) {
-			player.sendMessage("§e####################################################");
-			player.sendMessage("§a   *** C H A R G E D   C R E E P E R S   M I N E C R A F T ***");
-			player.sendMessage("");
-			player.sendMessage("§aThis server requires registration and account activation on");
-			player.sendMessage("§aour website for builder. §dchargedcreepers.com/user/register");
-			player.sendMessage("");
-			player.sendMessage("§aFor player commands, visit §dchargedcreepers.com/commands");
-			player.sendMessage("§aFor rules, visit §dchargedcreepers.com/rules");
-			player.sendMessage("§aTo vote, visit §dhttp://votefor.cc");
-			player.sendMessage("");
-			player.sendMessage("§e####################################################");
-			event.setCancelled(true);
-		}
-		
-		if (command.startsWith("/pl") || command.startsWith("/plugins")) {
+		if (command.equalsIgnoreCase("/pl") || command.startsWith("/plugins")) {
 			player.sendMessage("Plugins (5): " + ChatColor.GREEN + "WaffleLib" +
 					ChatColor.WHITE + ", " + ChatColor.GREEN + "WaffleShops" +
 					ChatColor.WHITE + ", " + ChatColor.GREEN + "WaffleScentials" +
 					ChatColor.WHITE + ", " + ChatColor.GREEN + "WaffleMobs" +
 					ChatColor.WHITE + ", " + ChatColor.GREEN + "WaffleIRC");
 			event.setCancelled(true);
+			return;
 		}
-		
+
 		if (command.startsWith("/version") || command.startsWith("/ver")) {
 			player.sendMessage("This server is running on gerbils");
 			event.setCancelled(true);
+			return;
+
+		}
+		
+		fixedLines.clear();
+		if (command.startsWith("/help") || command.startsWith("/?") || command.startsWith("/rules") || command.startsWith("/register") || command.startsWith("/vote")) {
+			String fileName = split[0] + ".txt";
+			ArrayList<String> lines = new ArrayList<String>();
+			lines = fileReader(fileName); 
+			try{
+				page = Integer.parseInt(split[lastInput]);
+			}
+			catch(Exception ex){
+				page = 1;
+			}
+			linesProcess(player, command, page, false);
+			event.setCancelled(true);
+			return;
 		}
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerQuit(PlayerQuitEvent event) {
 		PlayerClass afkPlayer = plugin.getWafflePlayer(event.getPlayer().getDisplayName());
+		event.setQuitMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + event.getPlayer().getName() + " quit ");
 		if (afkPlayer == null) {
 			WaffleLogger.severe(event.getPlayer().getDisplayName() + " Quit but was not in hashmap!");
 		} else {
@@ -194,6 +217,8 @@ public class PlayerListener implements Listener	{
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerJoin(PlayerJoinEvent Event) {
 		Player player = Event.getPlayer();
+		Event.setJoinMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + Event.getPlayer().getName() + " joined ");
+		WaffleScentials.plugin.broadcastToPrivilaged(ChatColor.AQUA + ">> " + ChatColor.GRAY + player.getName() + " [" + player.getAddress() + "] logged in" , "wscent.chat.logininfo");
 		String myPrefix = WaffleScentials.getPrefix(player);
 		if (myPrefix == null) return;
 		myPrefix = myPrefix.replace("&", "§");
@@ -216,7 +241,7 @@ public class PlayerListener implements Listener	{
 			String myPrefix = WaffleScentials.getPrefix(player);
 			myPrefix = myPrefix.replace("&", "§");
 			ChatClass.setTabName(player, myPrefix);
-			plugin.getServer().broadcastMessage("§e** " + myPrefix + player.getDisplayName() + "§f is no longer AFK");
+			plugin.getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY +  player.getName() + " is no longer AFK");
 			afkPlayer.unsetAFK();
 		}
 	}
@@ -229,12 +254,10 @@ public class PlayerListener implements Listener	{
 		if (!im.isEmpty()) {
 			if (im.get(1).contains(event.getPlayer().getDisplayName())) return;
 			event.setCancelled(true);
-			event.getPlayer().sendMessage(ChatColor.GRAY + "This is a kit item and you are not permitted to pick it up.");
-			//event.getPlayer().sendMessage(ChatColor.GRAY + "The item will now despawn.");
-			//event.getItem().remove();
 		}
 	} 
 
+	/*
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		Player player = event.getPlayer();
@@ -260,6 +283,7 @@ public class PlayerListener implements Listener	{
 			} 
 		}
 	}
+	 */
 
 	@EventHandler (priority = EventPriority.NORMAL)
 	public void onInventoryClick (InventoryClickEvent event) {
@@ -309,5 +333,114 @@ public class PlayerListener implements Listener	{
 		//}
 		return false;
 	}
+
+	private ArrayList<String> fileReader(String fileName){
+
+		ArrayList<String> tempLines = new ArrayList<String>();
+		String folderName = plugin.getDataFolder().getParent();
+
+		try{
+			FileInputStream fis = new FileInputStream(folderName + "/WaffleScentials/text/" + fileName);
+			Scanner scanner = new Scanner(fis, "UTF-8");
+			while (scanner.hasNextLine()) {
+				try{
+					fixedLines.add(scanner.nextLine() + " ");
+				}
+				catch(Exception ex){
+					WaffleLogger.severe(ex);
+					fixedLines.add(" ");
+				}
+			}
+			scanner.close();
+			fis.close();
+		}
+		catch (Exception ex){
+			WaffleLogger.severe(ex);
+		}
+
+		return tempLines;
+
+	}
+
+	private void variableSwap(Player player, ArrayList<String> lines){
+
+		//Swapping out some variables with their respective replacement.
+		for(String l : lines){
+
+			//Basics
+			String fixedLine = "";
+
+			//Time Based
+
+			//--> WorldTime
+			double worldTime = player.getWorld().getTime() + 6000;
+			double relativeTime = worldTime % 24000;
+			long worldHours = (long) (relativeTime / 1000);
+			long worldMinutes = (long) (((relativeTime % 1000) * 0.6) / 10); //I'm assuming this is how it works. lel.
+			String worldMinutesResult = "";
+			String worldTimeResult = "";
+
+			if(worldMinutes < 10){
+				worldMinutesResult = "0" + worldMinutes;
+			}
+			else{
+				worldMinutesResult = worldMinutes + "";
+			}
+
+			if(worldHours >= 12){
+				worldHours -= 12;
+				worldTimeResult = worldHours + ":" + worldMinutesResult + " PM";
+			}
+			else{
+				worldTimeResult = worldHours + ":" + worldMinutesResult + " AM";
+			}
+
+		}
+	}
+
+	private void linesProcess(Player player, String command, int page, boolean motd){
+		//Define our page numbers
+		int size = fixedLines.size();
+		int pages;
+
+		if(size % linesPerPage == 0){
+			pages = size / linesPerPage;
+		}
+		else{
+			pages = size / linesPerPage + 1;
+		}
+
+		//This here grabs the specified 9 lines, or if it's the last page, the left over amount of lines.
+		String commandName = command.replace("/", "");
+		commandName = commandName.toUpperCase();
+		String header = "§m                                §r§d %current/%count §r§m                                §";
+
+		if(pages != 1){
+
+			header = header.replace("%commandname", commandName);
+			header = header.replace("%current", Integer.toString(page));
+			header = header.replace("%count", Integer.toString(pages));
+			header = header.replace("%command", command);
+			header = header + " ";
+
+			player.sendMessage(header);
+		}
+		//Some math, magic, and wizards.
+		int highNum = (page * linesPerPage);
+		int lowNum = (page - 1) * linesPerPage;
+		for (int number = lowNum; number < highNum; number++){
+			if(number >= size){
+				if(!motd && pages != 1){
+					player.sendMessage(" ");
+				}
+			}
+			else{
+				player.sendMessage(fixedLines.get(number).replace("&", "§"));
+			}
+
+		}
+	}
+
+
 }
 

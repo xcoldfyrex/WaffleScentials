@@ -25,9 +25,13 @@ public class Config extends JavaPlugin {
 
 	public static String chatFormat;
 	public static int afkTimer = 300;
+	public static int maxMessages = 3;
+	public static int maxMessagesToKick = 5;
+	public static int maxChatTime = 3;
 	private static HashMap<World, Float> deathTax = new HashMap<World, Float>();
 
 	public boolean loadSettings() {
+		WaffleScentials.kits.clear();
 		configFile = new File(WaffleScentials.plugin.getDataFolder(), "config.yml");
 		config = WaffleScentials.plugin.getConfig();
 

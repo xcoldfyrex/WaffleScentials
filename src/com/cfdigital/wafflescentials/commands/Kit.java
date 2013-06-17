@@ -15,13 +15,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.cfdigital.wafflescentials.WaffleScentials;
 
 public class Kit implements CommandExecutor {
-	
-	 WaffleScentials plugin;
+
+	WaffleScentials plugin;
 
 	public Kit(WaffleScentials plugin) {
 		this.plugin = plugin;
 	}
-    
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
 		String commandName = command.getName().toLowerCase();
@@ -33,9 +33,9 @@ public class Kit implements CommandExecutor {
 		if (commandName.equalsIgnoreCase("kit")) {
 			if (trimmedArgs.length == 0) {
 				if (plugin.hasPermissions(player, "wscent.kits")) {
-					sender.sendMessage(WaffleScentials.Prefix + "Kits:");
+					sender.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "These are the curent kits available:");
 					for (String kit : WaffleScentials.kits.keySet()) {
-						sender.sendMessage(kit);
+						sender.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "/kit " + kit);
 					}
 				}
 			} 
@@ -45,7 +45,7 @@ public class Kit implements CommandExecutor {
 						long lastUsed = plugin.getWafflePlayer(player.getName()).getKitLastUsed(trimmedArgs[0]);
 						int coolDown = WaffleScentials.kits.get(trimmedArgs[0]).getCoolDown();
 						if ((System.currentTimeMillis() / 1000L - lastUsed) < coolDown) {
-							sender.sendMessage(WaffleScentials.Prefix + "§dYou spawned this kit too recently!");
+							sender.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You spawned this kit too recently");
 							return true;
 						}
 						plugin.getWafflePlayer(player.getDisplayName()).setKitLastUsed(trimmedArgs[0], System.currentTimeMillis() / 1000L);
@@ -69,20 +69,16 @@ public class Kit implements CommandExecutor {
 							player.getInventory().addItem(is);
 							x++;
 						}
-						sender.sendMessage(WaffleScentials.Prefix + "§dYou have been given kit: " + trimmedArgs[0]);
-					}
-					else {
-						sender.sendMessage(WaffleScentials.Prefix + "§dNo permission to spawn this kit!");
-					}
+						sender.sendMessage(ChatColor.AQUA + ">> " + ChatColor.GRAY + "You have been given kit: " + trimmedArgs[0]);
+					}				
 				}
 				else {
-					sender.sendMessage(WaffleScentials.Prefix + "§dNo such kit!");
+					sender.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "This kit does not exist");
 				}
 			}
 			return true;
 		}
 		return true;
 	}
-	
+
 }
-	

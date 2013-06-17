@@ -2,6 +2,8 @@ package com.cfdigital.wafflescentials;
 
 import java.util.Date;
 
+import org.bukkit.ChatColor;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -14,6 +16,7 @@ public class Schedulers {
 
 	public static void setupTasks() {
 		//AFK timer
+		if (!plugin.isEnabled()) return;
 		plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
 				for (Player player : plugin.getServer().getOnlinePlayers()) {
@@ -25,11 +28,21 @@ public class Schedulers {
 						String myPrefix = WaffleScentials.getPrefix(player);
 						myPrefix = myPrefix.replace("&", "§");
 						ChatClass.setTabName(player, "[AFK]"+myPrefix);
-						plugin.getServer().broadcastMessage("§e** " + myPrefix + player.getName() + "§f is now AFK from being idle after " + Config.afkTimer + " seconds");   
+						plugin.getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + player.getName() + " is now AFK from being idle after " + Config.afkTimer + " seconds");   
 						afkPlayer.setAFK("AutoAFK");
 					} 
 				}
 			}
 		}, 1L * 5, 1L * 5);
+		
+		plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+			public void run() {
+				for (Player player : plugin.getServer().getOnlinePlayers()) {
+					WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()).decrMessageCount();
+					//Log.warn(WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()) + " " + WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()).getMessageCount());
+				}
+			}
+		}, 1L * 20, 1L * 20);
+
 	}
 }
