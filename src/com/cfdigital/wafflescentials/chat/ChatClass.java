@@ -26,7 +26,7 @@ public class ChatClass {
 	
 	public static void setTabName(Player player, String text) {
 		String pn = text+player.getName();
-		if (pn.length() > 14) pn = pn.substring(0, 13);
+		if (pn.length() > 16) pn = pn.substring(0, 15);
 		player.setPlayerListName(pn);
 		
 	}

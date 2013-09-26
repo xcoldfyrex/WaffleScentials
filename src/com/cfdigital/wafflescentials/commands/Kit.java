@@ -44,10 +44,12 @@ public class Kit implements CommandExecutor {
 					if (plugin.hasPermissions(player, "wscent.kits."+trimmedArgs[0])) {
 						long lastUsed = plugin.getWafflePlayer(player.getName()).getKitLastUsed(trimmedArgs[0]);
 						int coolDown = WaffleScentials.kits.get(trimmedArgs[0]).getCoolDown();
-						if ((System.currentTimeMillis() / 1000L - lastUsed) < coolDown) {
-							sender.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You spawned this kit too recently");
+						
+						if (!plugin.hasEnoughTimePassed(lastUsed,coolDown)) {
+							sender.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You may not spawn this kit for another " + plugin.getTimeLeft(lastUsed,coolDown));
 							return true;
 						}
+						
 						plugin.getWafflePlayer(player.getDisplayName()).setKitLastUsed(trimmedArgs[0], System.currentTimeMillis() / 1000L);
 						List<ItemStack> items = new ArrayList<ItemStack>();
 						items.addAll(WaffleScentials.kits.get(trimmedArgs[0]).getItemStack());

@@ -12,8 +12,10 @@ import com.cfdigital.wafflescentials.chat.ChatClass;
 
 public class Messaging implements CommandExecutor {
 
-	public Messaging(WaffleScentials waffleScentials) {
-		// TODO Auto-generated constructor stub
+	WaffleScentials plugin;
+
+	public Messaging(WaffleScentials plugin) {
+		this.plugin = plugin;
 	}
 
 	@Override
@@ -29,15 +31,15 @@ public class Messaging implements CommandExecutor {
 
 		// /msg
 		if (commandName.equalsIgnoreCase("msg") && trimmedArgs.length >= 2) {
-			if (WaffleScentials.plugin.getWafflePlayer(player.getName()).isMuted()) {
+			if (plugin.getWafflePlayer(player.getName()).isMuted()) {
 				player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this");
 			} else {
-				if (WaffleScentials.plugin.hasPermissions(player, "wscent.chat.msg")) {
-					if((WaffleScentials.plugin.getPlayer(trimmedArgs[0]) != null) &&  WaffleScentials.plugin.getPlayer(trimmedArgs[0]).isOnline()) {
+				if (plugin.hasPermissions(player, "wscent.chat.msg")) {
+					if((plugin.getPlayer(trimmedArgs[0]) != null) &&  plugin.getPlayer(trimmedArgs[0]).isOnline()) {
 						Player targetPlayer = WaffleScentials.plugin.getPlayer(trimmedArgs[0]);
 						targetPlayer.sendMessage(ChatColor.AQUA + "! ! " + ChatColor.GRAY + player.getDisplayName() + " -> me:  " + ChatClass.join(trimmedArgs, " ",1));
 						player.sendMessage(ChatColor.AQUA + "! ! " + ChatColor.GRAY + "me -> " +  targetPlayer.getDisplayName() + ": " +  ChatClass.join(trimmedArgs, " ", 1));
-						WaffleScentials.plugin.getWafflePlayer(targetPlayer.getName()).setLastMessager(player.getName());
+						plugin.getWafflePlayer(targetPlayer.getName()).setLastMessager(player.getName());
 						return true;
 					}
 					else {
@@ -47,20 +49,20 @@ public class Messaging implements CommandExecutor {
 				}
 			}
 		}
-		
+
 		// /reply
 		if ((commandName.equalsIgnoreCase("r") || commandName.equalsIgnoreCase("reply")) && trimmedArgs.length >= 1) {
-			if (WaffleScentials.plugin.getWafflePlayer(WaffleScentials.plugin.getPlayerName(player.getDisplayName())).isMuted()) {
+			if (plugin.getWafflePlayer(plugin.getPlayerName(player.getDisplayName())).isMuted()) {
 				player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this");
 			} else {
-				if (WaffleScentials.plugin.hasPermissions(player, "wscent.chat.msg")) {
+				if (plugin.hasPermissions(player, "wscent.chat.msg")) {
 					String lastMessager = null;
-					if ((lastMessager = WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()).getLastMessager()) != null) {
-						if (WaffleScentials.plugin.getPlayer(lastMessager).isOnline()) {
+					if ((lastMessager = plugin.getWafflePlayer(player.getDisplayName()).getLastMessager()) != null) {
+						if (plugin.getPlayer(lastMessager).isOnline()) {
 							Player targetPlayer = WaffleScentials.plugin.getPlayer(lastMessager);
 							targetPlayer.sendMessage(ChatColor.AQUA + "! ! " + ChatColor.GRAY + player.getDisplayName() + " -> me: " + ChatClass.join(trimmedArgs, " ",0));
 							player.sendMessage(ChatColor.AQUA + "! ! " + ChatColor.GRAY + "me -> " +  targetPlayer.getDisplayName() + ": " + ChatClass.join(trimmedArgs, " ", 0));
-							WaffleScentials.plugin.getWafflePlayer(targetPlayer.getDisplayName()).setLastMessager(player.getDisplayName());
+							plugin.getWafflePlayer(targetPlayer.getDisplayName()).setLastMessager(player.getDisplayName());
 							return true;
 						} else {
 							player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "Player is not online");
@@ -74,7 +76,34 @@ public class Messaging implements CommandExecutor {
 				}
 			}
 		}
-		return false;
+		// /me
+		if (commandName.equalsIgnoreCase("me") && trimmedArgs.length >= 1) {
+			if (plugin.getWafflePlayer(player.getName()).isMuted()) {
+				player.sendMessage(ChatColor.RED + ">> " + ChatColor.GRAY + "You are muted and cannot do this!");
+				return true;
+			} else {
+				if (plugin.hasPermissions(player, "wscent.chat.msg")) {
+					String myPrefix = plugin.getPrefix(player);
+					myPrefix = myPrefix.replace("&", "§");
+					plugin.getServer().broadcastMessage("§e** " + myPrefix + player.getDisplayName() + "§f " + ChatClass.join(trimmedArgs, " ", 0));
+					return true;
+				}
+			}
+		}
+
+		// /say
+		if (commandName.equalsIgnoreCase("say") && trimmedArgs.length >= 1) {
+			if (plugin.hasPermissions(player, "wscent.chat.broadcast")) {
+				String message = ChatClass.join(trimmedArgs, " ", 0);
+				String pn = "CONSOLE";
+				if (!(player == null))pn = player.getName();
+				plugin.getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + "[" + pn + ChatColor.LIGHT_PURPLE + "] " + message);
+			}
+			return true;
+		}
+		return true;
+
 	}
+	
 
 }

@@ -3,7 +3,7 @@ package com.cfdigital.wafflescentials.listeners;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.server.v1_5_R3.WorldChunkManager;
+import net.minecraft.server.v1_6_R3.WorldChunkManager;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -12,7 +12,8 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
+import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -33,8 +34,6 @@ import com.cfdigital.wafflescentials.WaffleScentials;
 public class BlockListener implements Listener	{
 	
 	final WaffleScentials plugin;
-	public java.util.Vector<Location> dispenserList = new java.util.Vector<Location>();
-
 	
 	public BlockListener(WaffleScentials instance) {
 		plugin = instance;
@@ -125,7 +124,7 @@ public class BlockListener implements Listener	{
 			if (block.getType().equals(Material.DISPENSER)) {
 				player.sendMessage(WaffleScentials.Prefix+"Registered dispenser...");
 				WaffleScentials.dispenserWaiting.remove(player);
-				dispenserList.add(block.getLocation());
+				plugin.dispenserList.add(block.getLocation());
 				event.setCancelled(true);
 				return;
 			}
@@ -134,7 +133,7 @@ public class BlockListener implements Listener	{
 				return;
 			}
 		}
-		if (dispenserList.contains(block.getLocation())) {
+		if (plugin.dispenserList.contains(block.getLocation())) {
 			player.sendMessage(WaffleScentials.Prefix+"This is an unlimited dispenser!");
 		}
 	}
@@ -153,7 +152,7 @@ public class BlockListener implements Listener	{
 			if (block.getType().equals(Material.DISPENSER)) {
 				player.sendMessage(WaffleScentials.Prefix+"Registered dispenser...");
 				WaffleScentials.dispenserWaiting.remove(player);
-				dispenserList.add(block.getLocation());
+				plugin.dispenserList.add(block.getLocation());
 				event.setCancelled(true);
 				return;
 			}
@@ -163,9 +162,9 @@ public class BlockListener implements Listener	{
 			}
 		}
 		
-		if (dispenserList.contains(block.getLocation())) {
+		if (plugin.dispenserList.contains(block.getLocation())) {
 			player.sendMessage(WaffleScentials.Prefix+"Unregistered unlimited dispenser!");
-			dispenserList.remove(block.getLocation());
+			plugin.dispenserList.remove(block.getLocation());
 		}
 		
 		if (block.getType().equals(Material.DISPENSER)) {
@@ -174,7 +173,7 @@ public class BlockListener implements Listener	{
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onDispense(BlockDispenseEvent event) {
 		if (event.isCancelled()) return;
 		ItemMeta item = event.getItem().getItemMeta();
@@ -184,8 +183,9 @@ public class BlockListener implements Listener	{
 		if (!im.isEmpty()) {
 			event.setCancelled(true);
 		}
+		Log.warn("TEST");
 
-		Iterator<Location> it = dispenserList.iterator();
+		Iterator<Location> it = plugin.dispenserList.iterator();
 		while(it.hasNext()) {
 			Location currentPosition = it.next();
 			if (currentPosition.equals(event.getBlock().getLocation())) {

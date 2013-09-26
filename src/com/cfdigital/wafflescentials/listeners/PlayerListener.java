@@ -1,13 +1,13 @@
 package com.cfdigital.wafflescentials.listeners;
 
 import java.io.FileInputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
 import org.bukkit.ChatColor;
-
 import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -20,16 +20,16 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.cfdigital.wafflelib.PlayerClass;
-import com.cfdigital.wafflelib.WaffleLib;
 import com.cfdigital.wafflescentials.Config;
+import com.cfdigital.wafflescentials.WafflePlayer;
 import com.cfdigital.wafflescentials.WaffleScentials;
 import com.cfdigital.wafflescentials.chat.ChatClass;
 import com.cfdigital.wafflescentials.util.WaffleLogger;
@@ -44,7 +44,7 @@ public class PlayerListener implements Listener	{
 		plugin = instance;
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerKick(PlayerKickEvent event) {
 		if (event.isCancelled()) return;
 		final Player player = event.getPlayer();
@@ -109,7 +109,7 @@ public class PlayerListener implements Listener	{
 		}
 
 
-		PlayerClass afkPlayer = plugin.getWafflePlayer(player.getDisplayName());
+		WafflePlayer afkPlayer = plugin.getWafflePlayer(player.getName());
 		if (afkPlayer == null) return;
 		plugin.getWafflePlayer(player.getDisplayName()).setLastActive(new Date().getTime());
 		if (afkPlayer.isPlayerAFK()) {
@@ -158,7 +158,7 @@ public class PlayerListener implements Listener	{
 		int lastInput = count - 1;
 		Player player = event.getPlayer();
 		if (event.isCancelled()) return;
-		PlayerClass afkPlayer = plugin.getWafflePlayer(player.getDisplayName());
+		WafflePlayer afkPlayer = plugin.getWafflePlayer(player.getName());
 		if (afkPlayer == null) return;
 		afkPlayer.setLastActive(new Date().getTime());
 		String command = event.getMessage();
@@ -205,7 +205,7 @@ public class PlayerListener implements Listener	{
 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		PlayerClass afkPlayer = plugin.getWafflePlayer(event.getPlayer().getDisplayName());
+		WafflePlayer afkPlayer = plugin.getWafflePlayer(event.getPlayer().getDisplayName());
 		event.setQuitMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + event.getPlayer().getName() + " quit ");
 		if (afkPlayer == null) {
 			WaffleLogger.severe(event.getPlayer().getDisplayName() + " Quit but was not in hashmap!");
@@ -218,6 +218,11 @@ public class PlayerListener implements Listener	{
 	public void onPlayerJoin(PlayerJoinEvent Event) {
 		Player player = Event.getPlayer();
 		Event.setJoinMessage(ChatColor.LIGHT_PURPLE + ">> " + ChatColor.GRAY + Event.getPlayer().getName() + " joined ");
+		if (!plugin.wafflePlayers.containsKey(player.getDisplayName())) {
+			WafflePlayer wafflePlayer = new WafflePlayer(player);
+			plugin.wafflePlayers.put(player.getName(), wafflePlayer);
+			plugin.getWafflePlayer(player.getName()).setLastActive(new Date().getTime());
+		}
 		WaffleScentials.plugin.broadcastToPrivilaged(ChatColor.AQUA + ">> " + ChatColor.GRAY + player.getName() + " [" + player.getAddress() + "] logged in" , "wscent.chat.logininfo");
 		String myPrefix = WaffleScentials.getPrefix(player);
 		if (myPrefix == null) return;
@@ -230,11 +235,21 @@ public class PlayerListener implements Listener	{
 		}
 	}
 
+	@EventHandler(priority = EventPriority.HIGH)             
+	public void onPlayerLogin(PlayerLoginEvent event){
+		final InetAddress ipAddress = event.getAddress();
+		String message = event.getKickMessage();
+		final Player player = event.getPlayer();
+		final Result result = event.getResult();
+		if (result != Result.ALLOWED) {
+			WaffleScentials.plugin.broadcastToPrivilaged(ChatColor.AQUA + "! ! " + ChatColor.GRAY + player.getName() + " [" + ipAddress + "] tried to connect but is banned","wscent.chat.logininfo");
+		}
+	}
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerMove(PlayerMoveEvent Event) {
 		if (Event.isCancelled()) return;
 		final Player player = Event.getPlayer();
-		PlayerClass afkPlayer = plugin.getWafflePlayer(player.getDisplayName());
+		WafflePlayer afkPlayer = plugin.getWafflePlayer(player.getDisplayName());
 		if (afkPlayer == null) return;
 		afkPlayer.setLastActive(new Date().getTime());
 		if (afkPlayer.isPlayerAFK()) {

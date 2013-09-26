@@ -9,67 +9,67 @@ public class WarpPermissions {
 
 
     public static boolean isAdmin(Player player) {
-        return WaffleScentials.plugin.hasPermissions(player, "mywarp.admin");
+        return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.admin");
     }
 
     public static boolean warp(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.warp");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.warp");
     }
 
     public static boolean delete(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.delete");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.delete");
     }
     
     public static boolean move(Player player) {
-        return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.move");
+        return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.move");
 }
 
     public static boolean list(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.list");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.list");
     }
 
     public static boolean welcome(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.welcome");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.welcome");
     }
 
     public static boolean search(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.search");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.search");
     }
 
     public static boolean give(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.soc.give");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.soc.give");
     }
 
     public static boolean invite(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.soc.invite");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.soc.invite");
     }
 
     public static boolean uninvite(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.soc.uninvite");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.soc.uninvite");
     }
 
     public static boolean canPublic(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.soc.public");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.soc.public");
     }
 
     public static boolean canPrivate(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.soc.private");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.soc.private");
     }
 
     public static boolean signWarp(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.sign.warp");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.sign.warp");
     }
 
     public static boolean privateCreate(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.createprivate");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.createprivate");
     }
     
     public static boolean publicCreate(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.createpublic");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.createpublic");
     }
     
     public static boolean compass(Player player) {
-            return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.basic.compass");
+            return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.basic.compass");
     }
 
     public static int maxPrivateWarps(Player player) {
@@ -87,11 +87,11 @@ public class WarpPermissions {
     }
     
     public static boolean extraWarps(Player player) {
-        return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.extra.extrawarps");
+        return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.extra.extrawarps");
     }
     
     public static boolean freeWarps(Player player) {
-        return WaffleScentials.plugin.hasPermissions(player, "mywarp.warp.extra.freewarps");
+        return WaffleScentials.plugin.hasPermissionsSilent(player, "wsent.warp.extra.freewarps");
     }
 
 }

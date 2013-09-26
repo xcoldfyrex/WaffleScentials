@@ -15,7 +15,7 @@ public class WaffleLogger {
     }
     
     public static void severe(Object object) {
-        log.log(Level.SEVERE, logPrefix + colorConvert("LIGHT_RED") + object);
+        log.log(Level.SEVERE, logPrefix + colorConvert("LIGHT_RED") + object + colorConvert("RESET"));
     }
 
     public static void info(Object object) {
@@ -23,7 +23,7 @@ public class WaffleLogger {
     }
 
     public static void warning(Object object) {
-        log.log(Level.WARNING, logPrefix + colorConvert("LIGHT_YELLOW") + object);
+        log.log(Level.WARNING, logPrefix + colorConvert("LIGHT_YELLOW") + object + colorConvert("RESET"));
     }
 	
 	 private static String colorConvert(String color) {

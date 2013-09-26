@@ -7,7 +7,6 @@ import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import com.cfdigital.wafflelib.PlayerClass;
 import com.cfdigital.wafflescentials.chat.ChatClass;
 
 public class Schedulers {
@@ -22,7 +21,7 @@ public class Schedulers {
 				for (Player player : plugin.getServer().getOnlinePlayers()) {
 					if (player == null) continue;
 					if (WaffleScentials.plugin.getWafflePlayer(player.getName()) == null) continue;
-					PlayerClass afkPlayer = WaffleScentials.plugin.getWafflePlayer(player.getName());
+					WafflePlayer afkPlayer = WaffleScentials.plugin.getWafflePlayer(player.getName());
 					if (afkPlayer.isPlayerAFK()) continue;
 					if (new Date().getTime() - (Config.afkTimer * 1000) > afkPlayer.getLastActive()) {
 						String myPrefix = WaffleScentials.getPrefix(player);
@@ -38,7 +37,7 @@ public class Schedulers {
 		plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
 				for (Player player : plugin.getServer().getOnlinePlayers()) {
-					WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()).decrMessageCount();
+					WaffleScentials.plugin.getWafflePlayer(player.getName()).decrMessageCount();
 					//Log.warn(WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()) + " " + WaffleScentials.plugin.getWafflePlayer(player.getDisplayName()).getMessageCount());
 				}
 			}

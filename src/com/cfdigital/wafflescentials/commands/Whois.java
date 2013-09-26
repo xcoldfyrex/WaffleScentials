@@ -10,7 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-import com.cfdigital.wafflelib.PlayerClass;
+import com.cfdigital.wafflescentials.WafflePlayer;
 import com.cfdigital.wafflescentials.WaffleScentials;
 
 public class Whois implements CommandExecutor {
@@ -27,7 +27,7 @@ public class Whois implements CommandExecutor {
 		String[] trimmedArgs = args;
 		if (commandName.equalsIgnoreCase("whois")) {
 			if (trimmedArgs.length == 1) {
-				PlayerClass pc = plugin.getWafflePlayer(trimmedArgs[0]);
+				WafflePlayer pc = plugin.getWafflePlayer(trimmedArgs[0]);
 				sender.sendMessage(ChatColor.GOLD + "Player information for " + ChatColor.GREEN + trimmedArgs[0]);
 				if (pc != null) {
 					Long lm = pc.getLastActive();

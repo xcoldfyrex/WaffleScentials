@@ -11,7 +11,6 @@ import java.util.List;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 
-import com.cfdigital.wafflelib.WaffleLib;
 import com.cfdigital.wafflescentials.WaffleScentials;
 
 public class WarpList {
@@ -117,7 +116,7 @@ public class WarpList {
 					double cost = 0;
 					if (!warp.isFree) {
 						cost = WarpSettings.warpFee;
-						Double bal = WaffleLib.economy.getBalance(player.getName());
+						Double bal = WaffleScentials.economy.getBalance(player.getName());
 						/*
 						if (bal < 1 ) {
 							player.sendMessage(ChatColor.RED + "You don't enough money to warp here! Try voting by /vote"); 
